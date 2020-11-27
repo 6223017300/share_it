@@ -1,0 +1,20 @@
+{% extends "base.html.twig" %}
+
+{% block title %}
+    Votre fichier a ete chargé !
+
+{% endblock %}
+
+{% block body %}
+    <h1> Votre fichier a ete chargé !</h1>
+    <p>
+    {#On accede au proprieté methode avec le point, Twig essaie automatiqsuement d'appeler le getter : getNomOriginal() #}
+
+    Le fichier <b>{{ fichier.nomOriginal }}</b> a été chargé, 
+    vous pouvez copier le lien de telechargement ci-dessous:
+    </p>
+
+    {# On cree un lien vers la page de telechargement (route "download") , l'adresse necessite un parametre id, on passe un tableau associatif à la fonction link () , syntaxe des tableaux ass ds twig: cle:valeur #}
+    <input type="text" class="form-control" value="http://localhost:8000{{ link('download', {id: fichier.id}) }}">
+
+{% endblock %}

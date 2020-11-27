@@ -20,9 +20,24 @@ $app
     ->setName('homepage')
 ;
 
+$app
+    ->get('/success/{id:\d+}', [HomeController::class, 'success'])
+    ->setName('success')
+;
+
+$app
+    ->get('/file-error', [HomeController::class, 'fileError'])
+    ->setName('file-error')
+;
+
 
 $app    
-    ->get('/download/{id:\d+}', [HomeController::class, 'download'])
+    ->get('/download/{id:\d+}', [HomeController::class, 'download']) 
+    ->setName('download')
+;
+
+$app    
+    ->get('/download/{nom:\s+}', [HomeController::class, 'download']) 
     ->setName('download')
 ;
 

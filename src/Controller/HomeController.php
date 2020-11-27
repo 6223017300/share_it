@@ -2,8 +2,10 @@
 
 namespace App\Controller;
 
+use App\Database\FichierManager;
 use App\File\UploadService;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\FetchMode;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UploadedFileInterface;
@@ -11,9 +13,9 @@ use Twig\Template;
 
 class HomeController extends AbstractController
 {
-    public function homepage(ResponseInterface $response, ServerRequestInterface $request, UploadService $uploadService, Connection $connection)
+    public function homepage(ResponseInterface $response, ServerRequestInterface $request, UploadService $uploadService, FichierManager $fichierManager)
     {
-        $database = $connection->getDatabase();
+        //$database = $connection->getDatabase();
         
         // recupere les fichiers envoyer
         
@@ -37,10 +39,9 @@ class HomeController extends AbstractController
             // Enregistrer les infos du fichier en base de données
 
            
-            $connection->insert('fichiers', [
-                'nom' => $nouveauNom,
-                'nom_original' => $fichier->getClientFilename(),
-            ]);
+            $fichier = $fichierManager->createFichier($nouveauNom, $fichier->getClientFilename());
+
+            return $this->redirect('success', ['id' => $fichier->getId()]);
 
             /*// méthode executeStatement()
             $connection->executeStatement('INSERT INTO fichier (nom, nom_original) VALUES (:nom, :nom_original)', [
@@ -66,12 +67,8 @@ class HomeController extends AbstractController
             $queryBuilder->execute();*/
     
             
-    // on recuper l'id tjrs dans un tableau
-    
-    
-    
-            
-
+           // on recuper l'id tjrs dans un tableau
+          
            //  Afficher un message à l'utilisateur
 
             //Generer un nom de fichier unique:
@@ -124,11 +121,60 @@ class HomeController extends AbstractController
         return $response;
     }*/
 
+    /**
+     * Verifier que l'identifiant (argument $id) correspond à un fichier existant
+     * Si ce ne pas le cas, rediriger vers une route qui affichera un message d'erreur
+     */
+
+    public function success(ResponseInterface $response, int $id, FichierManager $fichierManager){
+
+        $fichier = $fichierManager->getById($id);
+        if($fichier === null){
+            return $this->redirect('file-error'); 
+        }
+
+        return $this->template($response, 'success.html.twig', [
+            'fichier' => $fichier
+
+        ]);
+
+       
+    }
+
+    public function fileError(ResponseInterface $response){
+        return $this->template($response, 'file_error.html.twig');
+    }
+
+
     
 
-    public function download(ResponseInterface $response, int $id){
-        $response->getBody()->write(sprintf('Identifiant: %d', $id));
-        return $response;
+    public function download(ResponseInterface $response, int $id, FichierManager $fichierManager){
+
+        $fichier = $fichierManager->getById($id);
+        if($fichier === null){
+            return $this->redirect('file-error'); 
+        }
+
+        
+        $monFichier = $fichier->getNomOriginal();
+ 
+        if (file_exists($monFichier))
+        {
+            return $this->redirect('file-error');
+        }
+
+        
+        header("Content-Type: application/octet-stream");
+        header("Content-Description: File Transfer");
+        header("Content-Disposition: attachment; filename=\"" . basename($monFichier) . "\"");
+        //readfile(basename($fichier));
+
+        
+        die;
+
+        
+
+        
     }
 
     
